@@ -3,6 +3,7 @@ package example;
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
 import groovy.lang.Script;
+import groovy.transform.CompileStatic;
 import groovy.transform.TypeChecked;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.MultipleCompilationErrorsException;
@@ -44,6 +45,7 @@ public class TestGroovy {
     @Test
     public void testMissingVarIsOk() {
         CompilerConfiguration config = new CompilerConfiguration();
+        config.addCompilationCustomizers(new ASTTransformationCustomizer(CompileStatic.class));
         GroovyShell shell = new GroovyShell(config);
         shell.setVariable("x", 3);
         shell.parse("return x + 3");
@@ -70,6 +72,22 @@ public class TestGroovy {
     abstract static class MyScript extends Script {
         protected int x = 3;
     }
+    @Test(expected = MultipleCompilationErrorsException.class)
+    public void testDaggettIdea2Rainy() {
+        CompilerConfiguration config = new CompilerConfiguration();
+        config.addCompilationCustomizers(new ASTTransformationCustomizer(TypeChecked.class));
+        config.setScriptBaseClass(BaseScript.class.getCanonicalName());
+        GroovyShell shell = new GroovyShell(this.getClass().getClassLoader(), config);
+        shell.parse("this is not valid");
+    }
 
+    @Test
+    public void testDaggettIdea2Sunny() {
+        CompilerConfiguration config = new CompilerConfiguration();
+        config.addCompilationCustomizers(new ASTTransformationCustomizer(TypeChecked.class));
+        config.setScriptBaseClass(BaseScript.class.getCanonicalName());
+        GroovyShell shell = new GroovyShell(this.getClass().getClassLoader(), config);
+        shell.parse("x + 3");
+    }
 
 }
