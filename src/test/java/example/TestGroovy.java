@@ -38,7 +38,7 @@ public class TestGroovy {
         CompilerConfiguration config = new CompilerConfiguration();
         config.addCompilationCustomizers(new ASTTransformationCustomizer(NoUnresolvedVariablesAnnotation.class));
         GroovyShell shell = new GroovyShell(config);
-        new GroovyShell(config).parse("this is not valid");
+        shell.parse("this is not valid");
     }
 
 }
