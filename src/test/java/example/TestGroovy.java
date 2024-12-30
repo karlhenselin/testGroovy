@@ -12,7 +12,7 @@ import org.junit.Test;
 
 public class TestGroovy {
 
-    @Test
+    @Test(expected = MultipleCompilationErrorsException.class)
     public void testFailingNewWayDoesNotWork() {
         CompilerConfiguration config = new CompilerConfiguration();
         // Expect the next line to throw a compilation error, but it doesn't.
@@ -33,12 +33,43 @@ public class TestGroovy {
         new GroovyShell(config).parse("this is not valid");
     }
 
-    @Test
+    @Test(expected = MultipleCompilationErrorsException.class)
     public void testNewIdea2() {
         CompilerConfiguration config = new CompilerConfiguration();
         config.addCompilationCustomizers(new ASTTransformationCustomizer(NoUnresolvedVariablesAnnotation.class));
         GroovyShell shell = new GroovyShell(config);
         shell.parse("this is not valid");
     }
+
+    @Test
+    public void testMissingVarIsOk() {
+        CompilerConfiguration config = new CompilerConfiguration();
+        GroovyShell shell = new GroovyShell(config);
+        shell.setVariable("x", 3);
+        shell.parse("return x + 3");
+    }
+
+    @Test(expected = MultipleCompilationErrorsException.class)
+    public void testDaggettIdeaRainy() {
+        CompilerConfiguration config = new CompilerConfiguration();
+        config.addCompilationCustomizers(new ASTTransformationCustomizer(TypeChecked.class));
+        config.setScriptBaseClass(MyScript.class.getCanonicalName());
+        GroovyShell shell = new GroovyShell(this.getClass().getClassLoader(), config);
+        shell.parse("this is not valid");
+    }
+
+    @Test
+    public void testDaggettIdeaSunny() {
+        CompilerConfiguration config = new CompilerConfiguration();
+        config.addCompilationCustomizers(new ASTTransformationCustomizer(TypeChecked.class));
+        config.setScriptBaseClass(MyScript.class.getCanonicalName());
+        GroovyShell shell = new GroovyShell(this.getClass().getClassLoader(), config);
+        shell.parse("x + 3");
+    }
+
+    abstract static class MyScript extends Script {
+        protected int x = 3;
+    }
+
 
 }
